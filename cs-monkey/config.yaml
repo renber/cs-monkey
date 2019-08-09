@@ -1,0 +1,10 @@
+csmonkey:
+  server: localhost
+  sender:
+    name: Sender Name
+    phone: 24345435
+    email: mail@example.com    
+  recipients:
+    - recipient1@example.com
+    - recipient2@example.com
+    - recipient3@example.com
