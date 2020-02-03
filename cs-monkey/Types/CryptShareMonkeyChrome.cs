@@ -218,7 +218,7 @@ namespace cs_monkey.Types
                 string basepath = AppDomain.CurrentDomain.BaseDirectory;
                 string staticMockUploadSite = basepath + "/staticweb/mock/Befine Cryptshare Uploading.html";
                 staticMockUploadSite = System.IO.Path.GetFullPath(staticMockUploadSite);
-                browser.Load(staticMockUploadSite);
+                browser.Load(staticMockUploadSite);                
 
             } else
             {
@@ -237,8 +237,8 @@ namespace cs_monkey.Types
             while (true)
             {                
                 if (uploadProgress < 100)
-                {
-                    var t = await browser.EvaluateScriptAsync(@"
+                {                    
+                    var t = await browser.GetMainFrame().EvaluateScriptAsync(@"
 pbars = document.getElementsByClassName('progress-bar-success');
 if (pbars.length > 0)
   pbars[0].style.width;
@@ -258,7 +258,7 @@ else
                 if (!uploadSuccessful)
                 {
                     // check for the success message
-                    var t = await browser.EvaluateScriptAsync(@"
+                    var t = await browser.GetMainFrame().EvaluateScriptAsync(@"
 msgs = document.getElementsByClassName('alert-success summary');
 if (msgs.length > 0)
     msgs[0].innerText;

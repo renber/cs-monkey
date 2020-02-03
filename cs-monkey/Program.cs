@@ -13,11 +13,12 @@ namespace cs_monkey
 {
     class Program
     {        
-        static AutoResetEvent doneEvent;
+        static AutoResetEvent doneEvent;        
 
         static int Main(string[] args)
         {            
             Options options = null;
+            bool wasSuccessful = false;
 
             if (args.Length == 0)
             {
@@ -56,9 +57,16 @@ namespace cs_monkey
                     Console.WriteLine($"Initializing cs-monkey");
                     CryptShareMonkeyChrome monkey = new CryptShareMonkeyChrome(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "/sender_cache/" + options.SenderEmail);
 
-                    RunAsync(monkey, options).ConfigureAwait(false);
-
+                    var aw = RunAsync(monkey, options).ConfigureAwait(false);
                     doneEvent.WaitOne();
+
+                    wasSuccessful = aw.GetAwaiter().GetResult();
+
+                    if (wasSuccessful)
+                    {                       
+                        // fix: CefSharp assertion error sometimes setting exit code to < 0
+                        Environment.Exit(0);
+                    }
                 }
 
                 return 0;
@@ -69,15 +77,20 @@ namespace cs_monkey
 #if DEBUG
                 Console.ReadLine();
 #endif
-                return -1;
+                // return success on error if the upload was successful
+                // since this is the actual purpose of this application 
+                // (sometimes CefSharp throws an assertion on deinit)
+                return wasSuccessful ? 0 : -1;
             }
         }
 
-        private static async Task RunAsync(ICryptShareMonkey monkey, Options opt)
+        private static async Task<bool> RunAsync(ICryptShareMonkey monkey, Options opt)
         {
             // run in separate thread
-            await Task.Run(async () =>
+            return await Task<bool>.Run(async () =>
            {
+               bool uploadWasSuccessful = false;
+
                try
                {
                    if (opt.DemoMode)
@@ -127,6 +140,7 @@ namespace cs_monkey
                    }
 
                    await ExecuteStep("Uploading files", () => monkey.DoTransfer(opt.DemoMode, (p) => { Console.WriteLine($"{p:00}%..."); }));
+                   uploadWasSuccessful = true;
                    Console.WriteLine("Upload completed successfully");
                }
                catch (Exception e)
@@ -135,8 +149,10 @@ namespace cs_monkey
                }
                finally
                {
-                   doneEvent.Set();
+                   doneEvent.Set();                   
                }
+
+               return uploadWasSuccessful;
            });
         }
 
