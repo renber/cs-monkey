@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace cs_monkey.Types
 {
-    public interface ICryptShareMonkey
+    public interface ICryptShareMonkey : IDisposable
     {                
         bool IsInitialized { get; }
 

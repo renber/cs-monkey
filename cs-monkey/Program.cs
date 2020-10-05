@@ -55,21 +55,16 @@ namespace cs_monkey
                     options.Validate();
 
                     Console.WriteLine($"Initializing cs-monkey");
-                    CryptShareMonkeyChrome monkey = new CryptShareMonkeyChrome(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "/sender_cache/" + options.SenderEmail);
+                    using (CryptShareMonkeyChrome monkey = new CryptShareMonkeyChrome(System.IO.Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location) + "/sender_cache/" + options.SenderEmail))
+                    {
+                        var aw = RunAsync(monkey, options).ConfigureAwait(false);
+                        doneEvent.WaitOne();
 
-                    var aw = RunAsync(monkey, options).ConfigureAwait(false);
-                    doneEvent.WaitOne();
-
-                    wasSuccessful = aw.GetAwaiter().GetResult();
-
-                    if (wasSuccessful)
-                    {                       
-                        // fix: CefSharp assertion error sometimes setting exit code to < 0
-                        Environment.Exit(0);
-                    }
+                        wasSuccessful = aw.GetAwaiter().GetResult();
+                    }                    
                 }
 
-                return 0;
+                return wasSuccessful ? 0 : -1;
             }
             catch (Exception e)
             {

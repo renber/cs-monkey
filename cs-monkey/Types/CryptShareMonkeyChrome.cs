@@ -311,6 +311,12 @@ else
         {
             var tsk = await browser.GetMainFrame().EvaluateScriptAsync($"Array.prototype.slice.call(document.getElementsByTagName('h3')).some(x => x.innerText.trim() === '{title}');");
             return tsk.Result is bool b && b;
+        }        
+
+        public void Dispose()
+        {
+            browser?.Dispose();
+            Cef.Shutdown();
         }
     }
 
